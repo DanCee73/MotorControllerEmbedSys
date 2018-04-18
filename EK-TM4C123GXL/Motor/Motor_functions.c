@@ -17,19 +17,6 @@
 #include "delay.h"
 #include "Motor_functions.h"
 
-struct State{
-  unsigned char Out;           // Output
-  const struct State *Next[2]; // CW/CCW
-};
-
-StateType fsm[4]={
-  {10,{&fsm[1],&fsm[3]}},
-  { 9,{&fsm[2],&fsm[0]}},
-  { 5,{&fsm[3],&fsm[1]}},
-  { 6,{&fsm[0],&fsm[2]}}
-};
-unsigned char Pos;      // between 0 and 199
-const struct State *Pt; // Current State
 
 void init_stepper(void)
 {
@@ -39,91 +26,114 @@ void init_stepper(void)
     while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOE)){}
     GPIOPinTypeGPIOOutput(PORT_E,  GPIO_PIN_4 | GPIO_PIN_5);    // Set Port E pins 4,5 to outputs
     GPIOPinTypeGPIOOutput(PORT_D,  GPIO_PIN_2 | GPIO_PIN_3);    // Set Port D pins 2,3 to outputs
-    Pos = 0;
-    Pt = &fsm[0];
+    GPIOPadConfigSet(PORT_D, GPIO_PIN_2 | GPIO_PIN_3, GPIO_STRENGTH_8MA, GPIO_PIN_TYPE_STD);
+    GPIOPadConfigSet(PORT_E, GPIO_PIN_4 | GPIO_PIN_5, GPIO_STRENGTH_8MA, GPIO_PIN_TYPE_STD);
+
 }
 
 // call this function to step CW 15 degs
 void step_cw_15(void){
     uint8_t x;
     for (x = 0; x<7; x++){
-    Pt = Pt->Next[clockwise];     // circular
-      STEPPER = Pt->Out; // step motor
-      if(Pos==199){      // shaft angle
-        Pos = 0;         // reset
-      }
-      else{
-        Pos++; // CW
-      }
+        GPIOPinWrite(PORT_D, GPIO_PIN_3, HIGH);
+        GPIOPinWrite(PORT_E, GPIO_PIN_5, HIGH);
+        GPIOPinWrite(PORT_D, GPIO_PIN_2, LOW);
+        GPIOPinWrite(PORT_E, GPIO_PIN_4, LOW);
+        delayMs(1);
+        GPIOPinWrite(PORT_D, GPIO_PIN_3, HIGH);
+        GPIOPinWrite(PORT_D, GPIO_PIN_2, HIGH);
+        GPIOPinWrite(PORT_E, GPIO_PIN_5, LOW);
+        GPIOPinWrite(PORT_E, GPIO_PIN_4, LOW);
+        delayMs(1);
+        GPIOPinWrite(PORT_D, GPIO_PIN_2, HIGH);
+        GPIOPinWrite(PORT_E, GPIO_PIN_4, HIGH);
+        GPIOPinWrite(PORT_D, GPIO_PIN_3, LOW);
+        GPIOPinWrite(PORT_E, GPIO_PIN_5, LOW);
+        delayMs(1);
+        GPIOPinWrite(PORT_E, GPIO_PIN_4, HIGH);
+        GPIOPinWrite(PORT_E, GPIO_PIN_5, HIGH);
+        GPIOPinWrite(PORT_D, GPIO_PIN_2, LOW);
+        GPIOPinWrite(PORT_D, GPIO_PIN_3, LOW);
     }
-      delayMs(8);    // time to wait for motor to step once (1ms per step),
-                          // so for 15degs/1.8degs = 8.33 steps.
+
 }
 
 // call this function to step CCW 15 degs
 void step_ccw_15(void){
     uint8_t x;
     for (x = 0; x<7; x++){
-    Pt = Pt->Next[counterclockwise]; // circular
-      STEPPER = Pt->Out; // step motor
-      if(Pos==0){        // shaft angle
-        Pos = 199;       // reset
-      }
-      else{
-        Pos--; // CCW
-      }
+    GPIOPinWrite(PORT_E, GPIO_PIN_4, HIGH);
+    GPIOPinWrite(PORT_E, GPIO_PIN_5, HIGH);
+    GPIOPinWrite(PORT_D, GPIO_PIN_2, LOW);
+    GPIOPinWrite(PORT_D, GPIO_PIN_3, LOW);
+    delayMs(1);
+    GPIOPinWrite(PORT_D, GPIO_PIN_2, HIGH);
+    GPIOPinWrite(PORT_E, GPIO_PIN_4, HIGH);
+    GPIOPinWrite(PORT_D, GPIO_PIN_3, LOW);
+    GPIOPinWrite(PORT_E, GPIO_PIN_5, LOW);
+    delayMs(1);
+    GPIOPinWrite(PORT_D, GPIO_PIN_3, HIGH);
+    GPIOPinWrite(PORT_D, GPIO_PIN_2, HIGH);
+    GPIOPinWrite(PORT_E, GPIO_PIN_5, LOW);
+    GPIOPinWrite(PORT_E, GPIO_PIN_4, LOW);
+    delayMs(1);
+    GPIOPinWrite(PORT_D, GPIO_PIN_3, HIGH);
+    GPIOPinWrite(PORT_E, GPIO_PIN_5, HIGH);
+    GPIOPinWrite(PORT_D, GPIO_PIN_2, LOW);
+    GPIOPinWrite(PORT_E, GPIO_PIN_4, LOW);
     }
-      delayMs(8);    // time to wait for motor to step once (1ms per step),
-                          // so for 15degs/1.8degs = 8.33 steps.
 }
 
 //call this function to step CCW one time (1.8 degs)
 void step_ccw_once(void){
 
-    Pt = Pt->Next[counterclockwise]; // circular
-          STEPPER = Pt->Out; // step motor
-          if(Pos==0){        // shaft angle
-            Pos = 199;       // reset
-          }
-          else{
-            Pos--; // CCW
-          }
-
-          delayMs(1);    // time to wait for motor to step once (1ms per step),
-                              // so for 15degs/1.8degs = 8.33 steps.
+    GPIOPinWrite(PORT_E, GPIO_PIN_4, HIGH);
+        GPIOPinWrite(PORT_E, GPIO_PIN_5, HIGH);
+        GPIOPinWrite(PORT_D, GPIO_PIN_2, LOW);
+        GPIOPinWrite(PORT_D, GPIO_PIN_3, LOW);
+        delayMs(1);
+        GPIOPinWrite(PORT_D, GPIO_PIN_2, HIGH);
+        GPIOPinWrite(PORT_E, GPIO_PIN_4, HIGH);
+        GPIOPinWrite(PORT_D, GPIO_PIN_3, LOW);
+        GPIOPinWrite(PORT_E, GPIO_PIN_5, LOW);
+        delayMs(1);
+        GPIOPinWrite(PORT_D, GPIO_PIN_3, HIGH);
+        GPIOPinWrite(PORT_D, GPIO_PIN_2, HIGH);
+        GPIOPinWrite(PORT_E, GPIO_PIN_5, LOW);
+        GPIOPinWrite(PORT_E, GPIO_PIN_4, LOW);
+        delayMs(1);
+        GPIOPinWrite(PORT_D, GPIO_PIN_3, HIGH);
+        GPIOPinWrite(PORT_E, GPIO_PIN_5, HIGH);
+        GPIOPinWrite(PORT_D, GPIO_PIN_2, LOW);
+        GPIOPinWrite(PORT_E, GPIO_PIN_4, LOW);
 }
 
 //call this function to step CW one time (1.8 degs)
 void step_cw_once(void){
-    Pt = Pt->Next[clockwise];     // circular
-          STEPPER = Pt->Out; // step motor
-          if(Pos==199){      // shaft angle
-            Pos = 0;         // reset
-          }
-          else{
-            Pos++; // CW
-          }
-
-          delayMs(1);    // time to wait for motor to step once (1ms per step),
-                              // so for 15degs/1.8degs = 8.33 steps.
+    GPIOPinWrite(PORT_D, GPIO_PIN_3, HIGH);
+            GPIOPinWrite(PORT_E, GPIO_PIN_5, HIGH);
+            GPIOPinWrite(PORT_D, GPIO_PIN_2, LOW);
+            GPIOPinWrite(PORT_E, GPIO_PIN_4, LOW);
+            delayMs(1);
+            GPIOPinWrite(PORT_D, GPIO_PIN_3, HIGH);
+            GPIOPinWrite(PORT_D, GPIO_PIN_2, HIGH);
+            GPIOPinWrite(PORT_E, GPIO_PIN_5, LOW);
+            GPIOPinWrite(PORT_E, GPIO_PIN_4, LOW);
+            delayMs(1);
+            GPIOPinWrite(PORT_D, GPIO_PIN_2, HIGH);
+            GPIOPinWrite(PORT_E, GPIO_PIN_4, HIGH);
+            GPIOPinWrite(PORT_D, GPIO_PIN_3, LOW);
+            GPIOPinWrite(PORT_E, GPIO_PIN_5, LOW);
+            delayMs(1);
+            GPIOPinWrite(PORT_E, GPIO_PIN_4, HIGH);
+            GPIOPinWrite(PORT_E, GPIO_PIN_5, HIGH);
+            GPIOPinWrite(PORT_D, GPIO_PIN_2, LOW);
+            GPIOPinWrite(PORT_D, GPIO_PIN_3, LOW);
 }
 // call this function passing in the amount of degrees desired
-void step_variable_x(unsigned char deg_x){
-    short CWsteps;
+void step_variable_x(uint32_t deg_x){
     unsigned char pos_x;
     pos_x = deg_x / 1.8;
-      if((CWsteps = (pos_x-Pos))<0){
-        CWsteps+=200;
-      } // CW steps is 0 to 199
-      if(CWsteps > 100){
-        while(pos_x != Pos){
-            step_ccw_once();
-        }
-      }
-      else{
-        while(pos_x != Pos){
-            step_cw_once();
-        }
-      }
+
 
 }

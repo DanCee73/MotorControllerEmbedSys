@@ -16,7 +16,7 @@
 #include "delay.h"
 #include "keypad/keypad.h"
 #include "menu.h"
-
+#include "Motor/Motor_functions.h"
 /*
  * Prototypes
  */
@@ -33,7 +33,7 @@ int main(void)
     clear_screen();
     cursor_home();
     init_keypad();
-
+    init_stepper();
 
     while(1)
     {
@@ -42,7 +42,11 @@ int main(void)
         if (pass == 1234)
         {
             print_string_justify("Good!", 0, 3);
-
+            uint8_t x;
+            for (x=0;x<200;x++){
+            step_cw_15();
+            //step_ccw_15();
+            }
         }
         else
         {
@@ -52,7 +56,7 @@ int main(void)
     delayMs(5000);
     }
 
-    return 0;
+    //return 0;
 }
 
 void disp_main_menu()
